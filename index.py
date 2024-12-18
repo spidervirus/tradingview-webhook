@@ -5,7 +5,7 @@ import os
 
 # Configure Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/webhook": {"origins": "*"}})  # Optional: Restrict CORS to specific domains for security
+CORS(app)  # Optional: Enable CORS if required for cross-domain requests
 
 # Configure logging to a file
 log_file = os.environ.get("WEBHOOK_LOG", "webhook.log")  # Log file path from environment variable
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Function to validate incoming JSON data
 def validate_signal(data):
     required_fields = ["action", "symbol", "price", "lot_size"]
-    missing_fields = [field for field in required_fields if not data.get(field)]
+    missing_fields = [field for field in required_fields if field not in data or not data[field]]
 
     if missing_fields:
         return False, f"Missing or invalid fields: {', '.join(missing_fields)}"
@@ -30,12 +30,10 @@ def validate_signal(data):
 
     # Validate price and lot_size as floats
     try:
-        price = float(data.get("price", 0))  # Default to 0 for safety
-        lot_size = float(data.get("lot_size", 0))
-        if price <= 0 or lot_size <= 0:
-            raise ValueError("Values must be positive")
-    except (ValueError, TypeError):
-        return False, "'price' and 'lot_size' must be positive valid numbers."
+        float(data.get("price"))
+        float(data.get("lot_size"))
+    except ValueError:
+        return False, "'price' and 'lot_size' must be valid numbers."
 
     return True, None
 
@@ -62,7 +60,7 @@ def webhook():
         price = float(data.get("price"))
         lot_size = float(data.get("lot_size"))
 
-        logger.info("Action: %s, Symbol: %s, Price: %s, Lot Size: %s", action, symbol, price, lot_size)
+        logger.info(f"Action: {action}, Symbol: {symbol}, Price: {price}, Lot Size: {lot_size}")
 
         # Placeholder for processing the signal (e.g., trigger trading action)
         process_signal(action, symbol, price, lot_size)
