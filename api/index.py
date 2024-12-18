@@ -1,21 +1,17 @@
 from flask import Flask, request, jsonify
 from werkzeug.middleware.proxy_fix import ProxyFix
 import logging
-import os
 
 # Configure Flask app
 app = Flask(__name__)
 
-# Optional: Enable CORS if required
-# from flask_cors import CORS
-# CORS(app)
-
-# Configure logging
-log_file = os.environ.get("WEBHOOK_LOG", "webhook.log")  # Default log file
+# Configure logging to standard output
 logging.basicConfig(
-    filename=log_file,
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler()  # Log to console instead of a file
+    ],
 )
 logger = logging.getLogger(__name__)
 
